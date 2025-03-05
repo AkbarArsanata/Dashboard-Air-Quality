@@ -9,11 +9,25 @@ import matplotlib.dates as mdates
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 
-# Load data from CSV
+# URL langsung ke file CSV di Google Drive
+url = "https://drive.google.com/uc?id=1naaH6_WxCXsZr_ym6XM6fwPAF7lsE_zL"
+
 try:
-    cleaned_dataframe = pd.read_csv(r"C:/Users/User/Downloads/Submision Analisis Data dengan Python/Dashboard/cleaned_dataframe.csv")
+    # Membaca data dari URL
+    cleaned_dataframe = pd.read_csv(url)
+    st.write("Data berhasil dimuat:")
+    st.write(cleaned_dataframe.head())
 except FileNotFoundError:
-    st.error("File not found. Please check the file path.")
+    st.error("File tidak ditemukan. Mohon periksa URL.")
+    st.stop()
+except pd.errors.EmptyDataError:
+    st.error("File kosong. Mohon periksa file CSV.")
+    st.stop()
+except pd.errors.ParserError:
+    st.error("Terjadi kesalahan dalam memparsing file CSV. Mohon periksa format file.")
+    st.stop()
+except Exception as e:
+    st.error(f"Terjadi kesalahan: {e}")
     st.stop()
 
 # Convert 'tanggal' column to datetime
