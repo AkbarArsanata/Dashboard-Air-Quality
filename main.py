@@ -1,3 +1,22 @@
+import subprocess
+import sys
+
+def install_and_import(package):
+    try:
+        __import__(package)
+    except ImportError:
+        st.write(f"Package {package} not found. Installing...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        __import__(package)
+        st.write(f"Package {package} successfully installed.")
+    else:
+        st.write(f"Package {package} is already installed.")
+
+required_packages = ["pandas", "matplotlib", "windrose", "seaborn", "numpy"]
+
+for package in required_packages:
+    install_and_import(package)
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
