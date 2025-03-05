@@ -1,0 +1,11 @@
+# Paket untuk manipulasi data
+pandas==2.2.2
+numpy==1.26.4
+
+# Paket untuk visualisasi data
+matplotlib==3.10.0
+matplotlib.dates==3.10.0 
+seaborn==0.13.2
+
+# Paket untuk visualisasi khusus
+windrose==1.9.2
