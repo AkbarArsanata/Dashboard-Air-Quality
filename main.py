@@ -1,48 +1,20 @@
 import streamlit as st
-import subprocess
-import sys
-import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from windrose import WindroseAxes
+import seaborn as sns
+import numpy as np
+import matplotlib.dates as mdates
 
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
-
-def install_requirements():
-    try:
-        # Periksa apakah file requirements.txt ada
-        if not os.path.isfile("Requirement.txt"):
-            st.error("File requirements.txt tidak ditemukan.")
-            return
-
-        # Jalankan perintah pip install -r requirements.txt
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        st.success("Paket berhasil diinstal.")
-    except subprocess.CalledProcessError as e:
-        st.error(f"Terjadi kesalahan saat menginstal paket: {e}")
-    except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}")
-
-# Panggil fungsi untuk menginstal paket
-install_requirements()
-
-# Import paket yang diperlukan setelah instalasi
-try:
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from windrose import WindroseAxes
-    import seaborn as sns
-    import matplotlib.dates as mdates
-    st.success("Semua paket berhasil diimpor.")
-except ImportError as e:
-    st.error(f"Terjadi kesalahan saat mengimpor paket: {e}")
 
 # Load data from CSV
 try:
     cleaned_dataframe = pd.read_csv(r"C:/Users/User/Downloads/Submision Analisis Data dengan Python/Dashboard/cleaned_dataframe.csv")
 except FileNotFoundError:
-    st.error("File tidak ditemukan. Silakan periksa path file.")
+    st.error("File not found. Please check the file path.")
     st.stop()
-
 
 # Convert 'tanggal' column to datetime
 cleaned_dataframe['tanggal'] = pd.to_datetime(cleaned_dataframe['tanggal'])
@@ -312,18 +284,18 @@ def plot_monthly_pollutant_averages(df):
 # Main function to run the dashboard
 def main():
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
         plot_temperature_data(cleaned_dataframe)
         plot_temperature_heatmap(cleaned_dataframe)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
         plot_wind_rose(cleaned_dataframe)
         plot_pollutant_vs_wind_direction(cleaned_dataframe)
         plot_max_pollutant_levels(cleaned_dataframe)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
         plot_pollution_levels_by_station(cleaned_dataframe)
         plot_yearly_pollution_levels(cleaned_dataframe)
         plot_average_pollutant_concentrations(cleaned_dataframe)
