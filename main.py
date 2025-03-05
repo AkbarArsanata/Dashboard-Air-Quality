@@ -9,7 +9,7 @@ st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 def install_requirements():
     try:
         # Periksa apakah file requirements.txt ada
-        if not os.path.isfile("requirements.txt"):
+        if not os.path.isfile("Requirement.txt"):
             st.error("File requirements.txt tidak ditemukan.")
             return
 
