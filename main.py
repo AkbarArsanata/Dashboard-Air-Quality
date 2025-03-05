@@ -2,12 +2,6 @@ import streamlit as st
 import subprocess
 import sys
 import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from windrose import WindroseAxes
-import seaborn as sns
-import matplotlib.dates as mdates
 
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
