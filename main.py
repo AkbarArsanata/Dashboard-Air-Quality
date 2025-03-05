@@ -14,7 +14,7 @@ def install_requirements():
             return
 
         # Jalankan perintah pip install -r requirements.txt
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "Requirement.txt"])
         st.success("Paket berhasil diinstal.")
     except subprocess.CalledProcessError as e:
         st.error(f"Terjadi kesalahan saat menginstal paket: {e}")
