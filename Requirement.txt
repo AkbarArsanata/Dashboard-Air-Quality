@@ -1,6 +1,5 @@
-pandas==2.2.2
-numpy==1.26.4
-matplotlib==3.10.0
-matplotlib.dates==3.10.0 
-seaborn==0.13.2
-windrose==1.9.2
+pandas
+numpy
+matplotlib
+windrose
+seaborn
