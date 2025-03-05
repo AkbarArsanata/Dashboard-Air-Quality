@@ -1,10 +1,37 @@
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-from windrose import WindroseAxes
-import seaborn as sns
-import numpy as np
-import matplotlib.dates as mdates
+import subprocess
+import sys
+import os
+
+def install_requirements():
+    try:
+        # Periksa apakah file requirements.txt ada
+        if not os.path.isfile("requirements.txt"):
+            st.error("File requirements.txt tidak ditemukan.")
+            return
+
+        # Jalankan perintah pip install -r requirements.txt
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        st.success("Paket berhasil diinstal.")
+    except subprocess.CalledProcessError as e:
+        st.error(f"Terjadi kesalahan saat menginstal paket: {e}")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan: {e}")
+
+# Panggil fungsi untuk menginstal paket
+install_requirements()
+
+# Import paket yang diperlukan setelah instalasi
+try:
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from windrose import WindroseAxes
+    import seaborn as sns
+    import matplotlib.dates as mdates
+    st.success("Semua paket berhasil diimpor.")
+except ImportError as e:
+    st.error(f"Terjadi kesalahan saat mengimpor paket: {e}")
 
 
 # Set page configuration
