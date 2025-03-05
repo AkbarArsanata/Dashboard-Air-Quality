@@ -2,6 +2,15 @@ import streamlit as st
 import subprocess
 import sys
 import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from windrose import WindroseAxes
+import seaborn as sns
+import matplotlib.dates as mdates
+
+# Set page configuration
+st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 
 def install_requirements():
     try:
@@ -32,10 +41,6 @@ try:
     st.success("Semua paket berhasil diimpor.")
 except ImportError as e:
     st.error(f"Terjadi kesalahan saat mengimpor paket: {e}")
-
-
-# Set page configuration
-st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 
 # Load data from CSV
 try:
@@ -312,18 +317,18 @@ def plot_monthly_pollutant_averages(df):
 # Main function to run the dashboard
 def main():
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>', unsafe_allow_html=True)
         plot_temperature_data(cleaned_dataframe)
         plot_temperature_heatmap(cleaned_dataframe)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>', unsafe_allow_html=True)
         plot_wind_rose(cleaned_dataframe)
         plot_pollutant_vs_wind_direction(cleaned_dataframe)
         plot_max_pollutant_levels(cleaned_dataframe)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>', unsafe_allow_html=True)
         plot_pollution_levels_by_station(cleaned_dataframe)
         plot_yearly_pollution_levels(cleaned_dataframe)
         plot_average_pollutant_concentrations(cleaned_dataframe)
