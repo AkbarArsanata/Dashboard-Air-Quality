@@ -9,12 +9,12 @@ st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 def install_requirements():
     try:
         # Periksa apakah file requirements.txt ada
-        if not os.path.isfile("Requirement.txt"):
+        if not os.path.isfile("requirements.txt"):
             st.error("File requirements.txt tidak ditemukan.")
             return
 
         # Jalankan perintah pip install -r requirements.txt
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "Requirement.txt"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
         st.success("Paket berhasil diinstal.")
     except subprocess.CalledProcessError as e:
         st.error(f"Terjadi kesalahan saat menginstal paket: {e}")
@@ -40,8 +40,9 @@ except ImportError as e:
 try:
     cleaned_dataframe = pd.read_csv(r"C:/Users/User/Downloads/Submision Analisis Data dengan Python/Dashboard/cleaned_dataframe.csv")
 except FileNotFoundError:
-    st.error("File not found. Please check the file path.")
+    st.error("File tidak ditemukan. Silakan periksa path file.")
     st.stop()
+
 
 # Convert 'tanggal' column to datetime
 cleaned_dataframe['tanggal'] = pd.to_datetime(cleaned_dataframe['tanggal'])
