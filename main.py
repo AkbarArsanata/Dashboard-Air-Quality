@@ -5,8 +5,8 @@ from windrose import WindroseAxes
 import seaborn as sns
 import numpy as np
 import matplotlib.dates as mdates
-# Instal paket yang diperlukan
-pip install -r requirements.txt
+
+
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
 
