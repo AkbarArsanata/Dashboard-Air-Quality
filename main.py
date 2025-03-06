@@ -98,15 +98,6 @@ def plot_temperature_data(df, start_date, end_date):
         monthly_station_data = station_data.resample('M')['TEMP'].mean()
         plt.plot(monthly_station_data.index, monthly_station_data, label=station, marker='o')
     
-    # Annotate global max and min temperatures with arrows only
-    plt.annotate('', xy=(global_max_date, global_max_temp),
-                 xytext=(global_max_date, global_max_temp + 1),
-                 arrowprops=dict(facecolor='red', shrink=0.05))
-    
-    plt.annotate('', xy=(global_min_date, global_min_temp),
-                 xytext=(global_min_date, global_min_temp - 1),
-                 arrowprops=dict(facecolor='blue', shrink=0.05))
-    
     plt.title('Rata-rata Suhu Tahunan per Stasiun')
     plt.xlabel('Tanggal')
     plt.ylabel('Suhu (°C)')
