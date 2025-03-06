@@ -311,8 +311,6 @@ def plot_average_pollutants_vs_wind_direction(df, start_date, end_date):
     # Menampilkan plot
     st.pyplot(plt)
 
-
-
 # Call the new plotting function in the main script
 plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
 # Call the plotting functions with the filtered data
