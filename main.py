@@ -1,8 +1,12 @@
+!pip install windrose
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns  # Import seaborn for heatmap
 import datetime
+from windrose import WindroseAxes
+import numpy as np
 
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
@@ -133,6 +137,46 @@ def plot_temperature_heatmap(df, start_date, end_date):
     
     st.pyplot(plt)
 
+# Mengubah arah angin dari teks menjadi derajat
+def wind_direction_to_degrees(direction):
+    directions = {
+        'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+        'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+        'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+        'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+    }
+    return directions.get(direction, np.nan)
+
+# Function to plot wind rose
+def plot_wind_rose(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Mengaplikasikan fungsi ke kolom 'wd'
+    filtered_df['wd_deg'] = filtered_df['wd'].apply(wind_direction_to_degrees)
+    
+    # Menghapus baris dengan nilai NaN di kolom 'wd_deg'
+    filtered_df = filtered_df.dropna(subset=['wd_deg', 'WSPM'])
+    
+    # Membuat plot wind rose
+    fig = plt.figure(figsize=(10, 8))
+    ax = WindroseAxes.from_ax(fig=fig)
+    ax.bar(filtered_df['wd_deg'], filtered_df['WSPM'], normed=True, opening=0.8, edgecolor='white')
+    ax.set_legend(title="Kecepatan Angin (m/s)")
+    ax.set_title("Rata - rata kecepatan angin")
+    
+    # Menampilkan plot
+    st.pyplot(fig)
+
 # Function to assign clusters based on pollutant levels
 def assign_clusters(row):
     pm2_5 = row['PM2.5']
@@ -229,5 +273,6 @@ def plot_monthly_pollutant_averages(df, start_date, end_date):
 # Call the plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
+plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
 plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
 plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
