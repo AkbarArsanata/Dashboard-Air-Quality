@@ -45,13 +45,25 @@ end_date = cleaned_dataframe.index.max()
 date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
 start_date, end_date = date_range
 
-# Function to plot temperature data
+# Function to plot temperature data with error handling
 def plot_temperature_data(df, start_date, end_date):
-    df = df[start_date:end_date]
-    stations = df['station'].unique()
+    # Check if 'TEMP' column exists
+    if 'TEMP' not in df.columns:
+        st.error("Kolom 'TEMP' tidak ditemukan dalam DataFrame.")
+        return
+    
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    stations = filtered_df['station'].unique()
     
     # Resample for monthly frequency and calculate mean temperature
-    monthly_data = df.resample('M')['TEMP'].mean().reset_index()
+    monthly_data = filtered_df.resample('M')['TEMP'].mean().reset_index()
     
     # Find global max and min temperatures
     global_max_temp = monthly_data['TEMP'].max()
@@ -65,7 +77,7 @@ def plot_temperature_data(df, start_date, end_date):
     plt.figure(figsize=(14, 8))
     
     for station in stations:
-        station_data = df[df['station'] == station]
+        station_data = filtered_df[filtered_df['station'] == station]
         monthly_station_data = station_data.resample('M')['TEMP'].mean()
         plt.plot(monthly_station_data.index, monthly_station_data, label=station, marker='o')
     
@@ -88,13 +100,25 @@ def plot_temperature_data(df, start_date, end_date):
     
     st.pyplot(plt)
 
-# Function to plot temperature heatmap
+# Function to plot temperature heatmap with error handling
 def plot_temperature_heatmap(df, start_date, end_date):
-    df = df[start_date:end_date]
-    df['hour'] = df.index.hour
-    df['date'] = df.index.date
+    # Check if 'TEMP' column exists
+    if 'TEMP' not in df.columns:
+        st.error("Kolom 'TEMP' tidak ditemukan dalam DataFrame.")
+        return
     
-    heatmap_data = df.groupby(['date', 'hour'])['TEMP'].mean().unstack()
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    filtered_df['hour'] = filtered_df.index.hour
+    filtered_df['date'] = filtered_df.index.date
+    
+    heatmap_data = filtered_df.groupby(['date', 'hour'])['TEMP'].mean().unstack()
     
     plt.figure(figsize=(12, 8))
     sns.heatmap(heatmap_data, cmap='coolwarm', annot=False, cbar_kws={'label': 'Suhu (°C)'})
@@ -131,20 +155,35 @@ cleaned_dataframe['wd_deg'] = cleaned_dataframe['wd'].apply(wind_direction_to_de
 # Drop rows with NaN values in 'wd_deg' and 'WSPM'
 cleaned_dataframe = cleaned_dataframe.dropna(subset=['wd_deg', 'WSPM'])
 
-# Function to plot wind rose
+# Function to plot wind rose with error handling
 def plot_wind_rose(df, start_date, end_date):
-    df = df[start_date:end_date]
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
     fig1 = plt.figure(figsize=(10, 8))
     ax = WindroseAxes.from_ax(fig=fig1)
-    ax.bar(df['wd_deg'], df['WSPM'], normed=True, opening=0.8, edgecolor='white')
+    ax.bar(filtered_df['wd_deg'], filtered_df['WSPM'], normed=True, opening=0.8, edgecolor='white')
     ax.set_legend(title="Kecepatan Angin (m/s)")
     ax.set_title("Rata rata kecepatan angin")
     st.pyplot(fig1)
 
-# Function to plot scatter plot of average pollutant levels vs wind direction
+# Function to plot scatter plot of average pollutant levels vs wind direction with error handling
 def plot_pollutant_vs_wind_direction(df, start_date, end_date):
-    df = df[start_date:end_date][['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
-    average_pollutants = df.groupby('wd').mean().reset_index()
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    filtered_df = filtered_df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
+    average_pollutants = filtered_df.groupby('wd').mean().reset_index()
     
     plt.figure(figsize=(14, 8))
     sns.scatterplot(data=average_pollutants, x='wd', y='PM2.5', label='PM2.5', marker='o')
@@ -162,16 +201,23 @@ def plot_pollutant_vs_wind_direction(df, start_date, end_date):
     plt.tight_layout()
     st.pyplot(plt)
 
-# Function to plot bar chart of maximum average pollutant levels with wind direction annotations
+# Function to plot bar chart of maximum average pollutant levels with wind direction annotations with error handling
 def plot_max_pollutant_levels(df, start_date, end_date):
-    df = df[start_date:end_date]
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
     pollutants = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
     averages = []
     directions = []
     
     for pollutant in pollutants:
-        max_value = df[pollutant].max()
-        max_direction = df.loc[df[pollutant] == max_value, 'wd'].values[0]
+        max_value = filtered_df[pollutant].max()
+        max_direction = filtered_df.loc[filtered_df[pollutant] == max_value, 'wd'].values[0]
         averages.append(max_value)
         directions.append(max_direction)
     
@@ -224,10 +270,17 @@ def assign_clusters(row):
 # Apply the function to assign clusters
 cleaned_dataframe['Cluster'] = cleaned_dataframe.apply(assign_clusters, axis=1)
 
-# Function to plot stacked bar chart of pollution levels at each station
+# Function to plot stacked bar chart of pollution levels at each station with error handling
 def plot_pollution_levels_by_station(df, start_date, end_date):
-    df = df[start_date:end_date]
-    proportion_df = df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    proportion_df = filtered_df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
     proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
     
     fig1, ax1 = plt.subplots()
@@ -240,10 +293,17 @@ def plot_pollution_levels_by_station(df, start_date, end_date):
     fig1.tight_layout()
     st.pyplot(fig1)
 
-# Function to plot yearly proportions of pollution levels
+# Function to plot yearly proportions of pollution levels with error handling
 def plot_yearly_pollution_levels(df, start_date, end_date):
-    df = df[start_date:end_date]
-    yearly_cluster_counts = df.resample('Y').Cluster.value_counts().unstack().fillna(0)
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    yearly_cluster_counts = filtered_df.resample('Y').Cluster.value_counts().unstack().fillna(0)
     yearly_proportions = yearly_cluster_counts.div(yearly_cluster_counts.sum(axis=1), axis=0)
     
     fig2, ax2 = plt.subplots(figsize=(10, 6))
@@ -257,10 +317,17 @@ def plot_yearly_pollution_levels(df, start_date, end_date):
     fig2.tight_layout()
     st.pyplot(fig2)
 
-# Function to plot pie chart of average pollutant concentrations
+# Function to plot pie chart of average pollutant concentrations with error handling
 def plot_average_pollutant_concentrations(df, start_date, end_date):
-    df = df[start_date:end_date]
-    average_pollutants = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    average_pollutants = filtered_df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
     custom_colors = ['#FF9999','#66B3FF','#99FF99','#FFCC99','#C2C2F0','#FF6666']
     
     fig3, ax3 = plt.subplots(figsize=(8, 8))
@@ -277,10 +344,17 @@ def plot_average_pollutant_concentrations(df, start_date, end_date):
     fig3.tight_layout()
     st.pyplot(fig3)
 
-# Function to plot monthly averages of pollutants
+# Function to plot monthly averages of pollutants with error handling
 def plot_monthly_pollutant_averages(df, start_date, end_date):
-    df = df[start_date:end_date]
-    monthly_avg = df.resample('M').agg({
+    # Filter data based on selected date range
+    filtered_df = df[start_date:end_date]
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    monthly_avg = filtered_df.resample('M').agg({
         'PM2.5': 'mean',
         'PM10': 'mean',
         'SO2': 'mean',
@@ -312,18 +386,18 @@ def plot_monthly_pollutant_averages(df, start_date, end_date):
 # Main function to run the dashboard
 def main():
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>', unsafe_allow_html=True)
         plot_temperature_data(cleaned_dataframe, start_date, end_date)
         plot_temperature_heatmap(cleaned_dataframe, start_date, end_date)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>', unsafe_allow_html=True)
         plot_wind_rose(cleaned_dataframe, start_date, end_date)
         plot_pollutant_vs_wind_direction(cleaned_dataframe, start_date, end_date)
         plot_max_pollutant_levels(cleaned_dataframe, start_date, end_date)
     
     with st.container():
-        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>', unsafe_allow_html=True)
         plot_pollution_levels_by_station(cleaned_dataframe, start_date, end_date)
         plot_yearly_pollution_levels(cleaned_dataframe, start_date, end_date)
         plot_average_pollutant_concentrations(cleaned_dataframe, start_date, end_date)
