@@ -39,8 +39,15 @@ cleaned_dataframe.set_index('tanggal', inplace=True)
 # Title of the Dashboard
 st.markdown('<h1 style="text-align: center;">Dashboard Kualitas Udara</h1>', unsafe_allow_html=True)
 
+# Date Range Selector
+start_date = cleaned_dataframe.index.min()
+end_date = cleaned_dataframe.index.max()
+date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
+start_date, end_date = date_range
+
 # Function to plot temperature data
-def plot_temperature_data(df):
+def plot_temperature_data(df, start_date, end_date):
+    df = df[start_date:end_date]
     stations = df['station'].unique()
     
     # Resample for monthly frequency and calculate mean temperature
@@ -82,7 +89,8 @@ def plot_temperature_data(df):
     st.pyplot(plt)
 
 # Function to plot temperature heatmap
-def plot_temperature_heatmap(df):
+def plot_temperature_heatmap(df, start_date, end_date):
+    df = df[start_date:end_date]
     df['hour'] = df.index.hour
     df['date'] = df.index.date
     
@@ -124,7 +132,8 @@ cleaned_dataframe['wd_deg'] = cleaned_dataframe['wd'].apply(wind_direction_to_de
 cleaned_dataframe = cleaned_dataframe.dropna(subset=['wd_deg', 'WSPM'])
 
 # Function to plot wind rose
-def plot_wind_rose(df):
+def plot_wind_rose(df, start_date, end_date):
+    df = df[start_date:end_date]
     fig1 = plt.figure(figsize=(10, 8))
     ax = WindroseAxes.from_ax(fig=fig1)
     ax.bar(df['wd_deg'], df['WSPM'], normed=True, opening=0.8, edgecolor='white')
@@ -133,8 +142,8 @@ def plot_wind_rose(df):
     st.pyplot(fig1)
 
 # Function to plot scatter plot of average pollutant levels vs wind direction
-def plot_pollutant_vs_wind_direction(df):
-    df = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
+def plot_pollutant_vs_wind_direction(df, start_date, end_date):
+    df = df[start_date:end_date][['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
     average_pollutants = df.groupby('wd').mean().reset_index()
     
     plt.figure(figsize=(14, 8))
@@ -154,7 +163,8 @@ def plot_pollutant_vs_wind_direction(df):
     st.pyplot(plt)
 
 # Function to plot bar chart of maximum average pollutant levels with wind direction annotations
-def plot_max_pollutant_levels(df):
+def plot_max_pollutant_levels(df, start_date, end_date):
+    df = df[start_date:end_date]
     pollutants = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
     averages = []
     directions = []
@@ -215,7 +225,8 @@ def assign_clusters(row):
 cleaned_dataframe['Cluster'] = cleaned_dataframe.apply(assign_clusters, axis=1)
 
 # Function to plot stacked bar chart of pollution levels at each station
-def plot_pollution_levels_by_station(df):
+def plot_pollution_levels_by_station(df, start_date, end_date):
+    df = df[start_date:end_date]
     proportion_df = df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
     proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
     
@@ -230,7 +241,8 @@ def plot_pollution_levels_by_station(df):
     st.pyplot(fig1)
 
 # Function to plot yearly proportions of pollution levels
-def plot_yearly_pollution_levels(df):
+def plot_yearly_pollution_levels(df, start_date, end_date):
+    df = df[start_date:end_date]
     yearly_cluster_counts = df.resample('Y').Cluster.value_counts().unstack().fillna(0)
     yearly_proportions = yearly_cluster_counts.div(yearly_cluster_counts.sum(axis=1), axis=0)
     
@@ -246,7 +258,8 @@ def plot_yearly_pollution_levels(df):
     st.pyplot(fig2)
 
 # Function to plot pie chart of average pollutant concentrations
-def plot_average_pollutant_concentrations(df):
+def plot_average_pollutant_concentrations(df, start_date, end_date):
+    df = df[start_date:end_date]
     average_pollutants = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
     custom_colors = ['#FF9999','#66B3FF','#99FF99','#FFCC99','#C2C2F0','#FF6666']
     
@@ -265,7 +278,8 @@ def plot_average_pollutant_concentrations(df):
     st.pyplot(fig3)
 
 # Function to plot monthly averages of pollutants
-def plot_monthly_pollutant_averages(df):
+def plot_monthly_pollutant_averages(df, start_date, end_date):
+    df = df[start_date:end_date]
     monthly_avg = df.resample('M').agg({
         'PM2.5': 'mean',
         'PM10': 'mean',
@@ -299,21 +313,21 @@ def plot_monthly_pollutant_averages(df):
 def main():
     with st.container():
         st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
-        plot_temperature_data(cleaned_dataframe)
-        plot_temperature_heatmap(cleaned_dataframe)
+        plot_temperature_data(cleaned_dataframe, start_date, end_date)
+        plot_temperature_heatmap(cleaned_dataframe, start_date, end_date)
     
     with st.container():
         st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
-        plot_wind_rose(cleaned_dataframe)
-        plot_pollutant_vs_wind_direction(cleaned_dataframe)
-        plot_max_pollutant_levels(cleaned_dataframe)
+        plot_wind_rose(cleaned_dataframe, start_date, end_date)
+        plot_pollutant_vs_wind_direction(cleaned_dataframe, start_date, end_date)
+        plot_max_pollutant_levels(cleaned_dataframe, start_date, end_date)
     
     with st.container():
         st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
-        plot_pollution_levels_by_station(cleaned_dataframe)
-        plot_yearly_pollution_levels(cleaned_dataframe)
-        plot_average_pollutant_concentrations(cleaned_dataframe)
-        plot_monthly_pollutant_averages(cleaned_dataframe)
+        plot_pollution_levels_by_station(cleaned_dataframe, start_date, end_date)
+        plot_yearly_pollution_levels(cleaned_dataframe, start_date, end_date)
+        plot_average_pollutant_concentrations(cleaned_dataframe, start_date, end_date)
+        plot_monthly_pollutant_averages(cleaned_dataframe, start_date, end_date)
 
 if __name__ == "__main__":
     main()
