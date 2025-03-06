@@ -382,15 +382,26 @@ def plot_average_pollutants_pie_chart(df, start_date, end_date):
     # Display pie chart
     st.pyplot(plt)
 
-# Call the new plotting function for average pollutants pie chart
-plot_average_pollutants_pie_chart(cleaned_dataframe, start_datetime, end_datetime)
-# Call the new plotting functions in the main script
-plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
-# Call the new plotting function in the main script
-plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
-# Call the plotting functions with the filtered data
-plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
-plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
-plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
-plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
-plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
+# Main function to run the dashboard
+def main():
+    with st.container():
+        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
+        plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
+        plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
+    
+    with st.container():
+        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
+        plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
+        plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
+        
+    
+    with st.container():
+        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
+        plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
+        plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
+        plot_average_pollutants_pie_chart(cleaned_dataframe, start_datetime, end_datetime)
+        plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
+
+if __name__ == "__main__":
+    main()
+    
