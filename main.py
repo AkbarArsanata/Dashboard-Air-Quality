@@ -45,15 +45,14 @@ end_date = cleaned_dataframe.index.max()
 date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
 start_date, end_date = date_range
 
-# Function to plot temperature data with error handling
 def plot_temperature_data(df, start_date, end_date):
     # Check if 'TEMP' column exists
     if 'TEMP' not in df.columns:
         st.error("Kolom 'TEMP' tidak ditemukan dalam DataFrame.")
         return
     
-    # Filter data based on selected date range
-    filtered_df = df[start_date:end_date]
+    # Filter data based on selected date range using .loc
+    filtered_df = df.loc[start_date:end_date]
     
     # Check if filtered data is empty
     if filtered_df.empty:
