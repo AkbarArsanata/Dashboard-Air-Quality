@@ -81,14 +81,6 @@ def plot_temperature_data(df, start_date, end_date):
     # Resample for monthly frequency and calculate mean temperature
     monthly_data = filtered_df.resample('M')['TEMP'].mean().reset_index()
     
-    # Find global max and min temperatures
-    global_max_temp = monthly_data['TEMP'].max()
-    global_min_temp = monthly_data['TEMP'].min()
-    
-    # Find dates for global max and min temperatures
-    global_max_date = monthly_data[monthly_data['TEMP'] == global_max_temp]['tanggal'].iloc[0]
-    global_min_date = monthly_data[monthly_data['TEMP'] == global_min_temp]['tanggal'].iloc[0]
-    
     # Create plot
     plt.figure(figsize=(14, 8))
     
@@ -190,7 +182,52 @@ def plot_yearly_pollution_levels(df, start_date, end_date):
     fig2.tight_layout()
     st.pyplot(fig2)
 
+# Function to plot monthly averages of pollutants
+def plot_monthly_pollutant_averages(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    monthly_avg = filtered_df.resample('M').agg({
+        'PM2.5': 'mean',
+        'PM10': 'mean',
+        'SO2': 'mean',
+        'NO2': 'mean',
+        'CO': 'mean',
+        'O3': 'mean'
+    }).reset_index()
+    
+    # Set 'tanggal' as the index for plotting
+    monthly_avg.set_index('tanggal', inplace=True)
+    
+    fig4, ax4 = plt.subplots(figsize=(14, 8))
+    ax4.plot(monthly_avg.index, monthly_avg['PM2.5'], label='PM2.5', marker='o')
+    ax4.plot(monthly_avg.index, monthly_avg['PM10'], label='PM10', marker='o')
+    ax4.plot(monthly_avg.index, monthly_avg['SO2'], label='SO2', marker='o')
+    ax4.plot(monthly_avg.index, monthly_avg['NO2'], label='NO2', marker='o')
+    ax4.plot(monthly_avg.index, monthly_avg['CO'], label='CO', marker='o')
+    ax4.plot(monthly_avg.index, monthly_avg['O3'], label='O3', marker='o')
+    
+    ax4.set_title('Rata-rata Bulanan Polutan')
+    ax4.set_xlabel('Tanggal')
+    ax4.set_ylabel('Konsentrasi (µg/m³)')
+    ax4.legend(title='Polutan')
+    ax4.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    st.pyplot(fig4)
+
 # Call the plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
 plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
+plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
