@@ -29,15 +29,17 @@ except Exception as e:
 
 # Convert 'tanggal' column to datetime
 cleaned_dataframe['tanggal'] = pd.to_datetime(cleaned_dataframe['tanggal'])
-# Set 'tanggal' as the index
-cleaned_dataframe.set_index('tanggal', inplace=True)
+
+# Create a unique index by adding a counter for duplicate dates
+cleaned_dataframe['counter'] = cleaned_dataframe.groupby('tanggal').cumcount()
+cleaned_dataframe.set_index(['tanggal', 'counter'], inplace=True)
 
 # Title of the Dashboard
 st.markdown('## Dashboard Kualitas Udara', unsafe_allow_html=True)
 
 # Date Range Selector
-start_date = cleaned_dataframe.index.min().date()
-end_date = cleaned_dataframe.index.max().date()
+start_date = cleaned_dataframe.index.get_level_values(0).min().date()
+end_date = cleaned_dataframe.index.get_level_values(0).max().date()
 date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
 
 # Convert date_range to proper datetime objects for DataFrame filtering
@@ -48,8 +50,8 @@ if len(date_range) == 2:
     end_datetime = pd.Timestamp(datetime.datetime.combine(end_date, datetime.time.max))
 else:
     # Fallback if date range selection is incomplete
-    start_datetime = pd.Timestamp(cleaned_dataframe.index.min())
-    end_datetime = pd.Timestamp(cleaned_dataframe.index.max())
+    start_datetime = pd.Timestamp(cleaned_dataframe.index.get_level_values(0).min())
+    end_datetime = pd.Timestamp(cleaned_dataframe.index.get_level_values(0).max())
 
 def plot_temperature_data(df, start_date, end_date):
     # Check if 'TEMP' column exists
@@ -58,13 +60,13 @@ def plot_temperature_data(df, start_date, end_date):
         return
     
     # Ensure start_date and end_date are within the DataFrame index
-    if start_date < df.index.min() or end_date > df.index.max():
+    if start_date < df.index.get_level_values(0).min() or end_date > df.index.get_level_values(0).max():
         st.error("Rentang tanggal yang dipilih berada di luar data yang tersedia.")
         return
     
     # Filter data based on selected date range using .loc
     try:
-        filtered_df = df.loc[start_date:end_date]
+        filtered_df = df.loc[(slice(start_date, end_date), slice(None)), :]
     except KeyError as e:
         st.error(f"Terjadi kesalahan saat memfilter data: {e}")
         return
@@ -77,7 +79,7 @@ def plot_temperature_data(df, start_date, end_date):
     stations = filtered_df['station'].unique()
     
     # Resample for monthly frequency and calculate mean temperature
-    monthly_data = filtered_df.resample('M')['TEMP'].mean().reset_index()
+    monthly_data = filtered_df.reset_index().groupby(['tanggal']).agg({'TEMP': 'mean'}).resample('M', on='tanggal').mean().reset_index()
     
     # Find global max and min temperatures
     global_max_temp = monthly_data['TEMP'].max()
@@ -92,8 +94,8 @@ def plot_temperature_data(df, start_date, end_date):
     
     for station in stations:
         station_data = filtered_df[filtered_df['station'] == station]
-        monthly_station_data = station_data.resample('M')['TEMP'].mean()
-        plt.plot(monthly_station_data.index, monthly_station_data, label=station, marker='o')
+        monthly_station_data = station_data.reset_index().groupby(['tanggal']).agg({'TEMP': 'mean'}).resample('M', on='tanggal').mean()
+        plt.plot(monthly_station_data.index, monthly_station_data['TEMP'], label=station, marker='o')
     
     # Annotate global max and min temperatures with arrows only
     plt.annotate('', xy=(global_max_date, global_max_temp),
