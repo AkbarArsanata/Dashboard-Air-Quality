@@ -268,6 +268,51 @@ def plot_monthly_pollutant_averages(df, start_date, end_date):
     
     st.pyplot(fig4)
 
+# Function to plot average pollutants against wind direction
+def plot_average_pollutants_vs_wind_direction(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Mengambil kolom yang diperlukan
+    df = filtered_df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
+
+    # Menghitung rata-rata untuk setiap polutan berdasarkan arah angin
+    average_pollutants = df.groupby('wd').mean().reset_index()
+
+    # Set up the matplotlib figure
+    plt.figure(figsize=(14, 8))
+
+    # Create a scatter plot for each pollutant against wind direction
+    sns.scatterplot(data=average_pollutants, x='wd', y='PM2.5', label='PM2.5', marker='o')
+    sns.scatterplot(data=average_pollutants, x='wd', y='PM10', label='PM10', marker='s')
+    sns.scatterplot(data=average_pollutants, x='wd', y='SO2', label='SO2', marker='^')
+    sns.scatterplot(data=average_pollutants, x='wd', y='NO2', label='NO2', marker='D')
+    sns.scatterplot(data=average_pollutants, x='wd', y='CO', label='CO', marker='x')
+    sns.scatterplot(data=average_pollutants, x='wd', y='O3', label='O3', marker='*')
+
+    # Adding titles and labels
+    plt.title('Rata-rata Konsentrasi Polutan Berdasarkan Arah Angin')
+    plt.xlabel('Arah Angin')
+    plt.ylabel('Konsentrasi (µg/m³)')
+    plt.xticks(rotation=45)
+    plt.legend(title='Polutan')
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Menampilkan plot
+    st.pyplot(plt)
+
+# Call the new plotting function in the main script
+plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
 # Call the plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
