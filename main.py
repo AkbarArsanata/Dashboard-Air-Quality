@@ -342,10 +342,50 @@ def plot_pollution_proportion_by_station(df, start_date, end_date):
     
     st.pyplot(plt)
 
+# Function to plot average pollutants pie chart
+def plot_average_pollutants_pie_chart(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Calculate average concentrations for each pollutant
+    average_pollutants = filtered_df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
 
+    # Define custom color list
+    custom_colors = ['#FF9999','#66B3FF','#99FF99','#FFCC99','#C2C2F0','#FF6666']
+
+    # Create pie chart with custom color list, border, and legend
+    plt.figure(figsize=(8, 8))
+    wedges, texts, autotexts = plt.pie(
+        average_pollutants,
+        labels=average_pollutants.index,
+        autopct='%1.1f%%',
+        startangle=140,
+        colors=custom_colors,
+        wedgeprops=dict(width=0.3, edgecolor='w')  # Adding white border with width 0.3
+    )
+
+    # Adding title
+    plt.title('Proporsi Konsentrasi Polutan')
+
+    # Adding legend
+    plt.legend(wedges, average_pollutants.index, title="Polutan", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+
+    # Display pie chart
+    st.pyplot(plt)
+
+# Call the new plotting function for average pollutants pie chart
+plot_average_pollutants_pie_chart(cleaned_dataframe, start_datetime, end_datetime)
 # Call the new plotting functions in the main script
 plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
-
 # Call the new plotting function in the main script
 plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
 # Call the plotting functions with the filtered data
