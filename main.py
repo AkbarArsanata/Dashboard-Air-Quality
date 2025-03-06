@@ -311,6 +311,63 @@ def plot_average_pollutants_vs_wind_direction(df, start_date, end_date):
     # Menampilkan plot
     st.pyplot(plt)
 
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_average_pollutants_vs_wind_direction(df):
+    # Memastikan DataFrame memiliki kolom yang diperlukan
+    required_columns = ['wd', 'WSPM', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+    for col in required_columns:
+        if col not in df.columns:
+            raise ValueError(f"DataFrame harus memiliki kolom '{col}'.")
+
+    # Mengubah arah angin dari teks menjadi derajat
+    def wind_direction_to_degrees(direction):
+        directions = {
+            'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+            'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+            'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+            'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+        }
+        return directions.get(direction, np.nan)
+
+    # Mengaplikasikan fungsi ke kolom 'wd'
+    df['wd_deg'] = df['wd'].apply(wind_direction_to_degrees)
+
+    # Menghapus baris dengan nilai NaN di kolom 'wd_deg'
+    df = df.dropna(subset=['wd_deg'])
+
+    # Menghitung rata-rata untuk setiap polutan berdasarkan arah angin
+    average_pollutants = df.groupby('wd_deg').mean().reset_index()
+
+    # Set up the matplotlib figure
+    plt.figure(figsize=(14, 8))
+
+    # Create a scatter plot for each pollutant against wind direction
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='PM2.5', label='PM2.5', marker='o')
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='PM10', label='PM10', marker='s')
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='SO2', label='SO2', marker='^')
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='NO2', label='NO2', marker='x')
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='CO', label='CO', marker='D')
+    sns.scatterplot(data=average_pollutants, x='wd_deg', y='O3', label='O3', marker='P')
+
+    # Adding titles and labels
+    plt.title('Rata-rata Konsentrasi Polutan Berdasarkan Arah Angin')
+    plt.xlabel('Arah Angin (Derajat)')
+    plt.ylabel('Konsentrasi (µg/m³)')
+    plt.legend(title='Polutan')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # Menampilkan plot
+    plt.show()
+
+# Example usage
+plot_average_pollutants_vs_wind_direction(cleaned_dataframe)
+
 # Call the new plotting function in the main script
 plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
 # Call the plotting functions with the filtered data
