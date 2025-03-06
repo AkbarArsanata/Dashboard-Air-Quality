@@ -49,7 +49,7 @@ if len(date_range) == 2:
     start_date, end_date = date_range
     # Convert date objects to datetime with time at beginning and end of day
     start_datetime = pd.Timestamp(datetime.datetime.combine(start_date, datetime.time.min))
-    end_datetime = pd.Timestamp(datetime.datetime.combine(end_date, datetime.time.max))
+    end_datetime = pd.Timestamp(datetime.datetime.combine(end_date, datetime.time.max()))
 else:
     # Fallback if date range selection is incomplete
     start_datetime = pd.Timestamp(cleaned_dataframe.index.min())
@@ -380,13 +380,85 @@ def plot_bar_chart_average_pollutants(df, start_date, end_date):
     # Menampilkan plot
     st.pyplot(plt)
 
-# Call the new plotting function in the main script
-plot_bar_chart_average_pollutants(cleaned_dataframe, start_datetime, end_datetime)
+# Function to plot the proportion of each pollution level at each station
+def plot_proportion_pollution_levels(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Calculate the proportion of each pollution level at each station
+    proportion_df = filtered_df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
+    proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
+    
+    # Plotting
+    fig, ax = plt.subplots(figsize=(14, 8))
+    proportion_df.plot(kind='bar', stacked=True, color=['red', 'orange', 'green'], ax=ax)
+    ax.set_title('Proporsi Tingkat Polusi Berdasarkan Station')
+    ax.set_xlabel('Station')
+    ax.set_ylabel('Proporsi')
+    ax.legend(title='Tingkat Polusi')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    st.pyplot(fig)
 
-# Call the plotting functions with the filtered data
+# Function to plot pie chart for average pollutant concentrations
+def plot_pie_chart_average_pollutants(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Menghitung rata-rata konsentrasi untuk setiap polutan dalam periode tertentu
+    average_pollutants = filtered_df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
+    
+    # Definisikan custom color list
+    custom_colors = ['#FF9999','#66B3FF','#99FF99','#FFCC99','#C2C2F0','#FF6666']
+    
+    # Membuat pie chart dengan custom color list, border, dan legend
+    fig, ax = plt.subplots(figsize=(8, 8))
+    wedges, texts, autotexts = ax.pie(
+        average_pollutants,
+        labels=average_pollutants.index,
+        autopct='%1.1f%%',
+        startangle=140,
+        colors=custom_colors,
+        wedgeprops=dict(width=0.3, edgecolor='w')  # Menambahkan border putih dengan lebar 0.3
+    )
+    
+    # Menambahkan judul
+    ax.set_title('Proporsi Konsentrasi Polutan')
+    
+    # Menambahkan legend
+    ax.legend(wedges, average_pollutants.index, title="Polutan", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+    
+    # Menampilkan pie chart
+    st.pyplot(fig)
+
+# Call the new plotting functions in the main script
+plot_proportion_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
+plot_pie_chart_average_pollutants(cleaned_dataframe, start_datetime, end_datetime)
+
+# Call the existing plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
 plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
 plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
 plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
 plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
+plot_bar_chart_average_pollutants(cleaned_dataframe, start_datetime, end_datetime)
