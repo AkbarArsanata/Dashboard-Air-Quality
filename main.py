@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  # Import seaborn for heatmap
 import datetime
 
 # Set page configuration
@@ -53,6 +53,94 @@ else:
     start_datetime = pd.Timestamp(cleaned_dataframe.index.min())
     end_datetime = pd.Timestamp(cleaned_dataframe.index.max())
 
+def plot_temperature_data(df, start_date, end_date):
+    # Check if 'TEMP' column exists
+    if 'TEMP' not in df.columns:
+        st.error("Kolom 'TEMP' tidak ditemukan dalam DataFrame.")
+        return
+    
+    # Ensure start_date and end_date are within the DataFrame index
+    if start_date < df.index.min() or end_date > df.index.max():
+        st.error("Rentang tanggal yang dipilih berada di luar data yang tersedia.")
+        return
+    
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    stations = filtered_df['station'].unique()
+    
+    # Resample for monthly frequency and calculate mean temperature
+    monthly_data = filtered_df.resample('M')['TEMP'].mean().reset_index()
+    
+    # Find global max and min temperatures
+    global_max_temp = monthly_data['TEMP'].max()
+    global_min_temp = monthly_data['TEMP'].min()
+    
+    # Find dates for global max and min temperatures
+    global_max_date = monthly_data[monthly_data['TEMP'] == global_max_temp]['tanggal'].iloc[0]
+    global_min_date = monthly_data[monthly_data['TEMP'] == global_min_temp]['tanggal'].iloc[0]
+    
+    # Create plot
+    plt.figure(figsize=(14, 8))
+    
+    for station in stations:
+        station_data = filtered_df[filtered_df['station'] == station]
+        monthly_station_data = station_data.resample('M')['TEMP'].mean()
+        plt.plot(monthly_station_data.index, monthly_station_data, label=station, marker='o')
+    
+    plt.title('Rata-rata Suhu Tahunan per Stasiun')
+    plt.xlabel('Tanggal')
+    plt.ylabel('Suhu (°C)')
+    plt.legend(title='Stasiun')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    st.pyplot(plt)
+
+# Function to plot temperature heatmap
+def plot_temperature_heatmap(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Extract hour and date from index
+    filtered_df['hour'] = filtered_df.index.hour
+    filtered_df['date'] = filtered_df.index.date
+    
+    # Group by date and hour, then calculate mean temperature
+    heatmap_data = filtered_df.groupby(['date', 'hour'])['TEMP'].mean().unstack()
+    
+    # Create heatmap
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(heatmap_data, cmap='coolwarm', annot=False, cbar_kws={'label': 'Suhu (°C)'})
+    
+    plt.title('Heatmap Suhu Rata-rata Berdasarkan Jam')
+    plt.xlabel('Jam dalam Sehari')
+    plt.ylabel('Tanggal')
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    
+    st.pyplot(plt)
+
 # Function to assign clusters based on pollutant levels
 def assign_clusters(row):
     pm2_5 = row['PM2.5']
@@ -74,26 +162,19 @@ def assign_clusters(row):
 # Apply the function to assign clusters
 cleaned_dataframe['Cluster'] = cleaned_dataframe.apply(assign_clusters, axis=1)
 
-def plot_pollution_levels_by_station(df, start_date, end_date):
-    # Filter data based on selected date range
-    filtered_df = df.loc[start_date:end_date]
-    
-    proportion_df = filtered_df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
-    proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
-    
-    fig1, ax1 = plt.subplots()
-    proportion_df.plot(kind='bar', stacked=True, color=['red', 'orange', 'green'], ax=ax1)
-    ax1.set_title('Proportion of Pollution Levels at Each Station')
-    ax1.set_xlabel('Station')
-    ax1.set_ylabel('Proportion')
-    ax1.legend(title='Pollution Level')
-    ax1.set_xticklabels(proportion_df.index, rotation=45)
-    fig1.tight_layout()
-    st.pyplot(fig1)
-
+# Function to plot yearly proportions of pollution levels
 def plot_yearly_pollution_levels(df, start_date, end_date):
-    # Filter data based on selected date range
-    filtered_df = df.loc[start_date:end_date]
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
     
     yearly_cluster_counts = filtered_df.resample('Y').Cluster.value_counts().unstack().fillna(0)
     yearly_proportions = yearly_cluster_counts.div(yearly_cluster_counts.sum(axis=1), axis=0)
@@ -103,7 +184,7 @@ def plot_yearly_pollution_levels(df, start_date, end_date):
     ax2.set_title('Proporsi Tingkat Polusi per Tahun')
     ax2.set_xlabel('Tahun')
     ax2.set_ylabel('Proporsi')
-    ax2.legend(title='Pollution Level')
+    ax2.legend(title='Tingkat Polusi')
     ax2.set_xticks(range(len(yearly_proportions.index)))
     ax2.set_xticklabels(yearly_proportions.index.strftime('%Y'), rotation=45)
     fig2.tight_layout()
@@ -112,5 +193,4 @@ def plot_yearly_pollution_levels(df, start_date, end_date):
 # Call the plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
-plot_pollution_levels_by_station(cleaned_dataframe, start_datetime, end_datetime)
 plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
