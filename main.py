@@ -57,8 +57,17 @@ def plot_temperature_data(df, start_date, end_date):
         st.error("Kolom 'TEMP' tidak ditemukan dalam DataFrame.")
         return
     
+    # Ensure start_date and end_date are within the DataFrame index
+    if start_date < df.index.min() or end_date > df.index.max():
+        st.error("Rentang tanggal yang dipilih berada di luar data yang tersedia.")
+        return
+    
     # Filter data based on selected date range using .loc
-    filtered_df = df.loc[start_date:end_date]
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
     
     # Check if filtered data is empty
     if filtered_df.empty:
