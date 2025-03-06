@@ -13,6 +13,7 @@ try:
     # Membaca data dari URL
     cleaned_dataframe = pd.read_csv(url)
     st.write("Data berhasil dimuat:")
+    st.write(cleaned_dataframe.head())
 except FileNotFoundError:
     st.error("File tidak ditemukan. Mohon periksa URL.")
     st.stop()
@@ -31,6 +32,9 @@ cleaned_dataframe['tanggal'] = pd.to_datetime(cleaned_dataframe['tanggal'])
 # Set 'tanggal' as the index
 cleaned_dataframe.set_index('tanggal', inplace=True)
 
+# Urutkan indeks untuk memastikan MultiIndex terurut
+cleaned_dataframe.sort_index(inplace=True)
+
 # Title of the Dashboard
 st.markdown('## Dashboard Kualitas Udara', unsafe_allow_html=True)
 
@@ -42,9 +46,11 @@ date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
 # Convert date_range to proper datetime objects for DataFrame filtering
 if len(date_range) == 2:
     start_date, end_date = date_range
+    # Convert date objects to datetime with time at beginning and end of day
     start_datetime = pd.Timestamp(datetime.datetime.combine(start_date, datetime.time.min))
     end_datetime = pd.Timestamp(datetime.datetime.combine(end_date, datetime.time.max))
 else:
+    # Fallback if date range selection is incomplete
     start_datetime = pd.Timestamp(cleaned_dataframe.index.min())
     end_datetime = pd.Timestamp(cleaned_dataframe.index.max())
 
@@ -76,6 +82,14 @@ def plot_temperature_data(df, start_date, end_date):
     # Resample for monthly frequency and calculate mean temperature
     monthly_data = filtered_df.resample('M')['TEMP'].mean().reset_index()
     
+    # Find global max and min temperatures
+    global_max_temp = monthly_data['TEMP'].max()
+    global_min_temp = monthly_data['TEMP'].min()
+    
+    # Find dates for global max and min temperatures
+    global_max_date = monthly_data[monthly_data['TEMP'] == global_max_temp]['tanggal'].iloc[0]
+    global_min_date = monthly_data[monthly_data['TEMP'] == global_min_temp]['tanggal'].iloc[0]
+    
     # Create plot
     plt.figure(figsize=(14, 8))
     
@@ -83,6 +97,15 @@ def plot_temperature_data(df, start_date, end_date):
         station_data = filtered_df[filtered_df['station'] == station]
         monthly_station_data = station_data.resample('M')['TEMP'].mean()
         plt.plot(monthly_station_data.index, monthly_station_data, label=station, marker='o')
+    
+    # Annotate global max and min temperatures with arrows only
+    plt.annotate('', xy=(global_max_date, global_max_temp),
+                 xytext=(global_max_date, global_max_temp + 1),
+                 arrowprops=dict(facecolor='red', shrink=0.05))
+    
+    plt.annotate('', xy=(global_min_date, global_min_temp),
+                 xytext=(global_min_date, global_min_temp - 1),
+                 arrowprops=dict(facecolor='blue', shrink=0.05))
     
     plt.title('Rata-rata Suhu Tahunan per Stasiun')
     plt.xlabel('Tanggal')
