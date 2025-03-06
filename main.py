@@ -382,6 +382,71 @@ def plot_average_pollutants_pie_chart(df, start_date, end_date):
     # Display pie chart
     st.pyplot(plt)
 
+
+# Function to plot average pollutants by wind direction
+def plot_average_pollutants_by_wind_direction_bar(df, start_date, end_date):
+    # Memastikan DataFrame memiliki kolom yang diperlukan
+    required_columns = ['wd', 'WSPM', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+    for col in required_columns:
+        if col not in df.columns:
+            st.error(f"DataFrame harus memiliki kolom '{col}'.")
+            return
+    
+    # Mengubah arah angin dari teks menjadi derajat
+    df['wd_deg'] = df['wd'].apply(wind_direction_to_degrees)
+    
+    # Menghapus baris dengan nilai NaN di kolom 'wd_deg'
+    df = df.dropna(subset=['wd_deg'])
+    
+    # Menghitung rata-rata untuk setiap polutan berdasarkan arah angin
+    numerical_columns = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+    average_pollutants = df.groupby('wd')[numerical_columns].mean().reset_index()
+    
+    # Menentukan polutan dengan rata-rata tertinggi untuk setiap arah angin
+    pollutants = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+    averages = []
+    directions = []
+
+    for pollutant in pollutants:
+        max_value = average_pollutants[pollutant].max()
+        max_direction = average_pollutants.loc[average_pollutants[pollutant] == max_value, 'wd'].values[0]
+        averages.append(max_value)
+        directions.append(max_direction)
+
+    # Membuat DataFrame untuk bar chart
+    data = pd.DataFrame({'Polutan': pollutants, 'Rata-rata': averages, 'Arah Angin': directions})
+
+    # Menentukan warna untuk setiap polutan
+    colors = {
+        'PM2.5': 'red',
+        'PM10': 'orange',
+        'SO2': 'green',
+        'NO2': 'blue',
+        'CO': 'purple',
+        'O3': 'brown'
+    }
+
+    # Membuat bar chart dengan warna yang ditentukan
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(data['Polutan'], data['Rata-rata'], color=[colors[p] for p in data['Polutan']])
+
+    # Menambahkan label arah angin di atas setiap bar
+    for bar, direction in zip(bars, data['Arah Angin']):
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval, direction, ha='center', va='bottom')
+
+    # Menambahkan judul dan label
+    plt.title('Polutan Berdasarkan Arah Angin')
+    plt.xlabel('Jenis Polutan')
+    plt.ylabel('Rata-rata Konsentrasi')
+    plt.ylim(0, max(averages) + 100)  # Menambahkan sedikit ruang di atas bar
+
+    # Menambahkan legenda
+    plt.legend(bars, data['Polutan'], title='Polutan')
+
+    # Menampilkan plot
+    st.pyplot(plt)
+
 # Main function to run the dashboard
 def main():
     with st.container():
@@ -393,6 +458,7 @@ def main():
         st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
         plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
         plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
+        plot_average_pollutants_by_wind_direction_bar(cleaned_dataframe, start_datetime, end_datetime)
         
     
     with st.container():
