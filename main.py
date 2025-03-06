@@ -5,6 +5,7 @@ from windrose import WindroseAxes
 import seaborn as sns
 import numpy as np
 import matplotlib.dates as mdates
+import datetime
 
 # Set page configuration
 st.set_page_config(page_title="Dashboard Kualitas Udara", layout="centered")
@@ -40,10 +41,20 @@ cleaned_dataframe.set_index('tanggal', inplace=True)
 st.markdown('<h1 style="text-align: center;">Dashboard Kualitas Udara</h1>', unsafe_allow_html=True)
 
 # Date Range Selector
-start_date = cleaned_dataframe.index.min()
-end_date = cleaned_dataframe.index.max()
+start_date = cleaned_dataframe.index.min().date()
+end_date = cleaned_dataframe.index.max().date()
 date_range = st.date_input("Pilih Rentang Tanggal", [start_date, end_date])
-start_date, end_date = date_range
+
+# Convert date_range to proper datetime objects for DataFrame filtering
+if len(date_range) == 2:
+    start_date, end_date = date_range
+    # Convert date objects to datetime with time at beginning and end of day
+    start_datetime = pd.Timestamp(datetime.datetime.combine(start_date, datetime.time.min))
+    end_datetime = pd.Timestamp(datetime.datetime.combine(end_date, datetime.time.max))
+else:
+    # Fallback if date range selection is incomplete
+    start_datetime = pd.Timestamp(cleaned_dataframe.index.min())
+    end_datetime = pd.Timestamp(cleaned_dataframe.index.max())
 
 def plot_temperature_data(df, start_date, end_date):
     # Check if 'TEMP' column exists
@@ -283,7 +294,7 @@ def plot_pollution_levels_by_station(df, start_date, end_date):
     proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
     
     fig1, ax1 = plt.subplots()
-    proportion_df.plot(kind='bar', stacked=True, color=['red', 'orange', 'green'], ax=ax1)
+    proportion_df.plot(kind='bar', stacked=True, color=['green', 'orange', 'red'], ax=ax1)
     ax1.set_title('Proportion of Pollution Levels at Each Station')
     ax1.set_xlabel('Station')
     ax1.set_ylabel('Proportion')
@@ -386,21 +397,21 @@ def plot_monthly_pollutant_averages(df, start_date, end_date):
 def main():
     with st.container():
         st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>', unsafe_allow_html=True)
-        plot_temperature_data(cleaned_dataframe, start_date, end_date)
-        plot_temperature_heatmap(cleaned_dataframe, start_date, end_date)
+        plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
+        plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
     
     with st.container():
         st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>', unsafe_allow_html=True)
-        plot_wind_rose(cleaned_dataframe, start_date, end_date)
-        plot_pollutant_vs_wind_direction(cleaned_dataframe, start_date, end_date)
-        plot_max_pollutant_levels(cleaned_dataframe, start_date, end_date)
+        plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
+        plot_pollutant_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
+        plot_max_pollutant_levels(cleaned_dataframe, start_datetime, end_datetime)
     
     with st.container():
         st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>', unsafe_allow_html=True)
-        plot_pollution_levels_by_station(cleaned_dataframe, start_date, end_date)
-        plot_yearly_pollution_levels(cleaned_dataframe, start_date, end_date)
-        plot_average_pollutant_concentrations(cleaned_dataframe, start_date, end_date)
-        plot_monthly_pollutant_averages(cleaned_dataframe, start_date, end_date)
+        plot_pollution_levels_by_station(cleaned_dataframe, start_datetime, end_datetime)
+        plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
+        plot_average_pollutant_concentrations(cleaned_dataframe, start_datetime, end_datetime)
+        plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
 
 if __name__ == "__main__":
     main()
