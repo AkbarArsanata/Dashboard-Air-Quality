@@ -449,24 +449,47 @@ def plot_average_pollutants_by_wind_direction_bar(df, start_date, end_date):
 
 # Main function to run the dashboard
 def main():
-    with st.container():
-        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>',unsafe_allow_html=True)
-        plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
-        plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
+    # Create tabs for different sections
+    tabs = st.tabs(["Temperature", "Pollution by Wind", "Pollution Analysis"])
     
-    with st.container():
-        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>',unsafe_allow_html=True)
-        plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
-        plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
-        plot_average_pollutants_by_wind_direction_bar(cleaned_dataframe, start_datetime, end_datetime)
+    # Temperature Tab
+    with tabs[0]:
+        st.markdown('<h2 style="text-align: center;">Kondisi Temperature Berdasarkan Waktu</h2>', unsafe_allow_html=True)
         
+        # Use columns to place plots side by side
+        col1, col2 = st.columns(2)
+        with col1:
+            plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
+        with col2:
+            plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
     
-    with st.container():
-        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>',unsafe_allow_html=True)
-        plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
-        plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
-        plot_average_pollutants_pie_chart(cleaned_dataframe, start_datetime, end_datetime)
-        plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
+    # Pollution by Wind Tab
+    with tabs[1]:
+        st.markdown('<h2 style="text-align: center;">Pengaruh Polusi Berdasarkan Angin</h2>', unsafe_allow_html=True)
+        
+        # Use columns to place plots side by side
+        col1, col2 = st.columns(2)
+        with col1:
+            plot_wind_rose(cleaned_dataframe, start_datetime, end_datetime)
+        with col2:
+            plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
+        
+        # Use expanders for detailed plots
+        with st.expander("Rincian Polusi Berdasarkan Arah Angin"):
+            plot_average_pollutants_by_wind_direction_bar(cleaned_dataframe, start_datetime, end_datetime)
+    
+    # Pollution Analysis Tab
+    with tabs[2]:
+        st.markdown('<h2 style="text-align: center;">Hasil Analisis Polusi</h2>', unsafe_allow_html=True)
+        
+        # Use columns to place plots side by side
+        col1, col2 = st.columns(2)
+        with col1:
+            plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
+            plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
+        with col2:
+            plot_average_pollutants_pie_chart(cleaned_dataframe, start_datetime, end_datetime)
+            plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
 
 if __name__ == "__main__":
     main()
