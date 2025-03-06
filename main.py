@@ -12,8 +12,6 @@ url = "https://drive.google.com/uc?id=1naaH6_WxCXsZr_ym6XM6fwPAF7lsE_zL"
 try:
     # Membaca data dari URL
     cleaned_dataframe = pd.read_csv(url)
-    st.write("Data berhasil dimuat:")
-    st.write(cleaned_dataframe.head())
 except FileNotFoundError:
     st.error("File tidak ditemukan. Mohon periksa URL.")
     st.stop()
