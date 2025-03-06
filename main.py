@@ -139,6 +139,15 @@ for col in required_columns:
         st.stop()
 
 # Convert wind direction to degrees
+def wind_direction_to_degrees(direction):
+    directions = {
+        'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+        'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+        'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+        'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+    }
+    return directions.get(direction, np.nan)
+
 cleaned_dataframe['wd_deg'] = cleaned_dataframe['wd'].apply(wind_direction_to_degrees)
 
 # Drop rows with NaN values in 'wd_deg' and 'WSPM'
