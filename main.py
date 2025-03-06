@@ -12,8 +12,8 @@ url = "https://drive.google.com/uc?id=1naaH6_WxCXsZr_ym6XM6fwPAF7lsE_zL"
 try:
     # Membaca data dari URL
     cleaned_dataframe = pd.read_csv(url)
-    st.write("Data berhasil dimuat:")
-    st.write(cleaned_dataframe.head())
+    # Menghapus kolom yang tidak diperlukan
+    cleaned_dataframe.drop(columns=['Unnamed: 0'], inplace=True)
 except FileNotFoundError:
     st.error("File tidak ditemukan. Mohon periksa URL.")
     st.stop()
@@ -31,9 +31,6 @@ except Exception as e:
 cleaned_dataframe['tanggal'] = pd.to_datetime(cleaned_dataframe['tanggal'])
 # Set 'tanggal' as the index
 cleaned_dataframe.set_index('tanggal', inplace=True)
-
-# Urutkan indeks untuk memastikan MultiIndex terurut
-cleaned_dataframe.sort_index(inplace=True)
 
 # Title of the Dashboard
 st.markdown('## Dashboard Kualitas Udara', unsafe_allow_html=True)
@@ -65,6 +62,9 @@ def plot_temperature_data(df, start_date, end_date):
         st.error("Rentang tanggal yang dipilih berada di luar data yang tersedia.")
         return
     
+    # Sort the index to ensure it's lexsorted
+    df.sort_index(inplace=True)
+
     # Filter data based on selected date range using .loc
     try:
         filtered_df = df.loc[start_date:end_date]
