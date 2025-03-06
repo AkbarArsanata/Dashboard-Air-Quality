@@ -226,8 +226,104 @@ def plot_monthly_pollutant_averages(df, start_date, end_date):
     
     st.pyplot(fig4)
 
+# Function to convert wind direction to degrees
+def wind_direction_to_degrees(direction):
+    directions = {
+        'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+        'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+        'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+        'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+    }
+    return directions.get(direction, np.nan)
+
+# Ensure DataFrame has the required columns
+required_columns = ['wd', 'WSPM', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+for col in required_columns:
+    if col not in cleaned_dataframe.columns:
+        st.error(f"DataFrame harus memiliki kolom '{col}'.")
+        st.stop()
+
+# Convert wind direction to degrees
+cleaned_dataframe['wd_deg'] = cleaned_dataframe['wd'].apply(wind_direction_to_degrees)
+
+# Drop rows with NaN values in 'wd_deg' and 'WSPM'
+cleaned_dataframe = cleaned_dataframe.dropna(subset=['wd_deg', 'WSPM'])
+
+# Function to plot wind rose
+def plot_wind_rose(df):
+    fig1 = plt.figure(figsize=(10, 8))
+    ax = WindroseAxes.from_ax(fig=fig1)
+    ax.bar(df['wd_deg'], df['WSPM'], normed=True, opening=0.8, edgecolor='white')
+    ax.set_legend(title="Kecepatan Angin (m/s)")
+    ax.set_title("Rata rata kecepatan angin")
+    st.pyplot(fig1)
+
+# Function to plot scatter plot of average pollutant levels vs wind direction
+def plot_pollutant_vs_wind_direction(df):
+    df = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'wd']].copy()
+    average_pollutants = df.groupby('wd').mean().reset_index()
+    
+    plt.figure(figsize=(14, 8))
+    sns.scatterplot(data=average_pollutants, x='wd', y='PM2.5', label='PM2.5', marker='o')
+    sns.scatterplot(data=average_pollutants, x='wd', y='PM10', label='PM10', marker='s')
+    sns.scatterplot(data=average_pollutants, x='wd', y='SO2', label='SO2', marker='^')
+    sns.scatterplot(data=average_pollutants, x='wd', y='NO2', label='NO2', marker='P')
+    sns.scatterplot(data=average_pollutants, x='wd', y='CO', label='CO', marker='D')
+    sns.scatterplot(data=average_pollutants, x='wd', y='O3', label='O3', marker='X')
+    
+    plt.yticks(np.arange(0, average_pollutants[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].max().max() + 300, 300))
+    plt.legend(title='Polusi')
+    plt.title('Rata rata tingkat polusi berdasarkan arah mata angin')
+    plt.xlabel('Mata Angin')
+    plt.ylabel('Rata rata tingkat polusi')
+    plt.tight_layout()
+    st.pyplot(plt)
+
+# Function to plot bar chart of maximum average pollutant levels with wind direction annotations
+def plot_max_pollutant_levels(df):
+    pollutants = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
+    averages = []
+    directions = []
+    
+    for pollutant in pollutants:
+        max_value = df[pollutant].max()
+        max_direction = df.loc[df[pollutant] == max_value, 'wd'].values[0]
+        averages.append(max_value)
+        directions.append(max_direction)
+    
+    data = pd.DataFrame({'Polutan': pollutants, 'Rata-rata': averages, 'Arah Angin': directions})
+    colors = {
+        'PM2.5': 'red',
+        'PM10': 'orange',
+        'SO2': 'green',
+        'NO2': 'blue',
+        'CO': 'purple',
+        'O3': 'brown'
+    }
+    
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(data['Polutan'], data['Rata-rata'], color=[colors[p] for p in data['Polutan']])
+    
+    # Annotate bars with arrows only
+    for bar, direction in zip(bars, data['Arah Angin']):
+        yval = bar.get_height()
+        plt.annotate('', xy=(bar.get_x() + bar.get_width()/2, yval),
+                     xytext=(bar.get_x() + bar.get_width()/2, yval + 100),
+                     arrowprops=dict(facecolor='black', shrink=0.05))
+    
+    plt.title('Polutan Tertinggi Berdasarkan Arah Angin')
+    plt.xlabel('Jenis Polutan')
+    plt.ylabel('Rata-rata Konsentrasi')
+    plt.ylim(0, max(averages) + 100)
+    plt.legend(bars, data['Polutan'], title='Polutan')
+    plt.tight_layout()
+    st.pyplot(plt)
+
 # Call the plotting functions with the filtered data
 plot_temperature_data(cleaned_dataframe, start_datetime, end_datetime)
 plot_temperature_heatmap(cleaned_dataframe, start_datetime, end_datetime)
 plot_yearly_pollution_levels(cleaned_dataframe, start_datetime, end_datetime)
 plot_monthly_pollutant_averages(cleaned_dataframe, start_datetime, end_datetime)
+plot_wind_rose(cleaned_dataframe)
+plot_pollutant_vs_wind_direction(cleaned_dataframe)
+plot_max_pollutant_levels(cleaned_dataframe)
