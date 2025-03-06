@@ -311,6 +311,88 @@ def plot_average_pollutants_vs_wind_direction(df, start_date, end_date):
     # Menampilkan plot
     st.pyplot(plt)
 
+
+# Function to plot proportion of each pollution level at each station
+def plot_pollution_proportion_by_station(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Calculate the proportion of each pollution level at each station
+    proportion_df = filtered_df.groupby(['station', 'Cluster']).size().unstack(fill_value=0)
+    proportion_df = proportion_df.div(proportion_df.sum(axis=1), axis=0)
+    
+    # Plotting
+    plt.figure(figsize=(14, 8))
+    proportion_df.plot(kind='bar', stacked=True, color=['red', 'orange', 'green'])
+    plt.title('Proprorsi Tingkat Polusi Berdasarkan Station')
+    plt.xlabel('Station')
+    plt.ylabel('Proportion')
+    plt.legend(title='Pollution Level')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    st.pyplot(plt)
+
+# Function to plot pie chart of average pollutants
+def plot_pie_chart_average_pollutants(df, start_date, end_date):
+    # Filter data based on selected date range using .loc
+    try:
+        filtered_df = df.loc[start_date:end_date]
+    except KeyError as e:
+        st.error(f"Terjadi kesalahan saat memfilter data: {e}")
+        return
+    
+    # Check if filtered data is empty
+    if filtered_df.empty:
+        st.warning("Tidak ada data yang tersedia untuk rentang tanggal yang dipilih.")
+        return
+    
+    # Menentukan periode (misalnya, seluruh periode data)
+    start_date = filtered_df['tanggal'].min()
+    end_date = filtered_df['tanggal'].max()
+    
+    # Filter data based on 'tanggal' column
+    filtered_dataframe = filtered_df[(filtered_df['tanggal'] >= start_date) & (filtered_df['tanggal'] <= end_date)]
+    
+    # Menghitung rata-rata konsentrasi untuk setiap polutan dalam periode tertentu
+    average_pollutants = filtered_dataframe[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean()
+    
+    # Definisikan custom color list
+    custom_colors = ['#FF9999','#66B3FF','#99FF99','#FFCC99','#C2C2F0','#FF6666']
+    
+    # Membuat pie chart dengan custom color list, border, dan legend
+    plt.figure(figsize=(8, 8))
+    wedges, texts, autotexts = plt.pie(
+        average_pollutants,
+        labels=average_pollutants.index,
+        autopct='%1.1f%%',
+        startangle=140,
+        colors=custom_colors,
+        wedgeprops=dict(width=0.3, edgecolor='w')  # Menambahkan border putih dengan lebar 0.3
+    )
+    
+    # Menambahkan judul
+    plt.title('Proporsi Konsentrasi Polutan')
+    
+    # Menambahkan legend
+    plt.legend(wedges, average_pollutants.index, title="Polutan", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+    
+    # Menampilkan pie chart
+    st.pyplot(plt)
+
+# Call the new plotting functions in the main script
+plot_pollution_proportion_by_station(cleaned_dataframe, start_datetime, end_datetime)
+plot_pie_chart_average_pollutants(cleaned_dataframe, start_datetime, end_datetime)
+
 # Call the new plotting function in the main script
 plot_average_pollutants_vs_wind_direction(cleaned_dataframe, start_datetime, end_datetime)
 # Call the plotting functions with the filtered data
